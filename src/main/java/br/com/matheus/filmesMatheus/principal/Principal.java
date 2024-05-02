@@ -1,9 +1,7 @@
 package br.com.matheus.filmesMatheus.principal;
 
-import br.com.matheus.filmesMatheus.model.DadosEpisodios;
-import br.com.matheus.filmesMatheus.model.DadosSerie;
-import br.com.matheus.filmesMatheus.model.DadosTemporadas;
-import br.com.matheus.filmesMatheus.model.Episodio;
+import br.com.matheus.filmesMatheus.model.*;
+import br.com.matheus.filmesMatheus.repository.SerieRepository;
 import br.com.matheus.filmesMatheus.service.ConsumoApi;
 import br.com.matheus.filmesMatheus.service.ConverteDados;
 
@@ -20,8 +18,13 @@ public class Principal {
     //Coisas fixas é bom declarar como constante, melhor seria varável de hambiente
     //Constante são decladas com letras maiúcuças em JAVA
     private final String ENDERECO = "https://www.omdbapi.com/?t=";
-    private final String API_KEY = "&apikey=cf8ca6c6";
+    private final String API_KEY = System.getenv("OMDB_APIKEY");
     private List<DadosSerie> dadosSeries = new ArrayList<>();
+    private SerieRepository repository;
+
+    public Principal(SerieRepository repository) {
+        this.repository = repository;
+    }
 
     public void exibeMenu() {
         var opcao = -1;
@@ -58,7 +61,10 @@ public class Principal {
 
     private void buscarSerieWeb() {
         DadosSerie dados = getDadosSerie();
-        dadosSeries.add(dados);
+        //dadosSeries.add(dados);
+        Serie serie = new Serie(dados);
+        //injecao de dependencia, instacia uma classe que precisamos usar
+        repository.save(serie);
         System.out.println(dados);
     }
 
@@ -83,6 +89,14 @@ public class Principal {
     }
 
     private void listarSeriesBuscadas() {
-        dadosSeries.forEach(System.out::println);
+        //List<Serie> series = new ArrayList<>();
+        //series = dadosSeries.stream()
+                        //.map(d -> new Serie(d))
+                                //.collect(Collectors.toList());
+
+        List<Serie> series = repository.findAll(); //find all retorna uma lista de <T>
+        series.stream()
+                .sorted(Comparator.comparing(Serie::getGenero))
+                .forEach(System.out::println);
     }
 }
